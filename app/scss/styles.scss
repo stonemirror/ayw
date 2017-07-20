@@ -1,0 +1,50 @@
+@import 'testing';
+@import 'sprites';
+@import 'susy/sass/susy';
+
+$red: #612;
+$reddish: #c80594;
+$blue: #5600ff;
+
+.github {
+  @include sprite($github);
+}
+
+.twitter {
+  @include sprite($twitter);
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .github {
+    @include retina-sprite($github-group);
+  }
+
+  .twitter {
+    @include retina-sprite($twitter-group);
+  }
+}
+
+.testing {
+  border: 2px dotted $blue;
+  color: $reddish;
+  padding: 5px;
+}
+
+.susy-test {
+  @include span(2);
+}
+
+h1 {
+  color: $red;
+  font-family: Raleway, Helvetica, Arial, sans-serif;
+  font-size: 320%;
+  font-weight: 400;
+}
+
+.flex {
+  display: flex;
+}
+
+.border-radius {
+  border-radius: 10px;
+}

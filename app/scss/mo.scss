@@ -1,0 +1,18 @@
+p {
+  font-family: serif;
+  font-size: 1.6em;
+  font-weight: lighter;
+
+  em {
+    font-family: fantasy;
+    font-size: 110%;
+    font-weight: 500;
+  }
+
+  strong {
+    font-family: sans-serif;
+    font-size: 2em;
+    font-stretch: semi-expanded;
+    font-weight: boldest;
+  }
+}

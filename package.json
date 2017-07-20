@@ -1,0 +1,44 @@
+{
+  "name": "project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "bower": "^1.8.0",
+    "browser-sync": "^2.18.12",
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-autoprefixer": "^4.0.0",
+    "gulp-babel": "^6.1.2",
+    "gulp-data": "^1.2.1",
+    "gulp-eslint": "^4.0.0",
+    "gulp-if": "^2.0.2",
+    "gulp-jscs": "^4.0.0",
+    "gulp-jshint": "^2.0.4",
+    "gulp-karma": "0.0.5",
+    "gulp-notify": "^3.0.0",
+    "gulp-nunjucks-render": "^2.2.1",
+    "gulp-plumber": "^1.1.0",
+    "gulp-sass": "^3.1.0",
+    "gulp-scss-lint": "^0.4.0",
+    "gulp-sourcemaps": "^2.6.0",
+    "gulp.spritesmith": "^6.5.0",
+    "jasmine-core": "^2.6.4",
+    "jshint": "^2.9.5",
+    "jshint-stylish": "^2.2.1",
+    "karma": "^1.7.0",
+    "karma-firefox-launcher": "^1.0.1",
+    "karma-jasmine": "^1.1.0",
+    "node-notifier": "^5.1.2",
+    "run-sequence": "^2.0.0"
+  },
+  "dependencies": {
+    "graceful-fs": "^4.1.11",
+    "minimatch": "^3.0.4"
+  }
+}
