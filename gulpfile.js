@@ -126,6 +126,15 @@ gulp.task('default', function(callback) {
     );
 });
 
+gulp.task('dev-ci', function(callback) {
+    runSequence(
+      'clean:dev',
+      ['sprites', 'lint:js', 'lint:scss'],
+      ['sass', 'nunjucks'],
+      callback
+    );
+});
+
 gulp.task('watch', function() {
     gulp.watch('app/scss/**/*.scss', ['sass', 'lint:scss']);
     gulp.watch('app/js/**/*.js', ['lint:js']);

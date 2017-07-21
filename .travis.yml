@@ -10,5 +10,5 @@ install:
   - "bower install"
   - "gem install scss_lint"
 script:
-  - gulp
-  - gulp test
+  - "gulp dev-ci"
+  - "gulp test"
