@@ -40,9 +40,5 @@
   "dependencies": {
     "graceful-fs": "^4.1.11",
     "minimatch": "^3.0.4"
-  },
-  "scripts": {
-    "gulp": "gulp",
-    "test": "gulp test"
   }
 }
