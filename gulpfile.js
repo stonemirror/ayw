@@ -18,13 +18,22 @@ var scssLint = require('gulp-scss-lint');
 var Server = require('karma').Server;
 
 function customPlumber(errTitle) {
-    return plumber({
-      errorHandler: notify.onError({
-        title: errTitle || "Error running Gulp",
-        message: "Error: <%= error.message %>",
-        sound: "Glass"
-      })
-    });
+    if (process.env.CI) {
+        return plumber({
+            errorHandler: function(err) {
+                throw Error(err.message);
+            }
+        });
+    }
+    else {
+        return plumber({
+            errorHandler: notify.onError({
+              title: errTitle || "Error running Gulp",
+              message: "Error: <%= error.message %>",
+              sound: "Glass"
+            })
+        });
+    }
 }
 
 gulp.task('browserSync', function() {
