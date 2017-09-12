@@ -17,6 +17,7 @@ var jscs = require('gulp-jscs');
 var scssLint = require('gulp-scss-lint');
 var Server = require('karma').Server;
 var gutil = require('gulp-util');
+var useref = require('gulp-useref');
 
 function customPlumber(errTitle) {
     if (process.env.CI) {
@@ -87,6 +88,12 @@ gulp.task('nunjucks', function() {
       .pipe(browserSync.reload({
         stream: true
       }));
+});
+
+gulp.task('useref', function() {
+    return gulp.src('app/*.html')
+        .pipe(useref())
+        .pipe(gulp.dest('dist'));
 });
 
 gulp.task('test', function(done) {
