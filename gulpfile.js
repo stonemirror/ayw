@@ -18,6 +18,11 @@ var scssLint = require('gulp-scss-lint');
 var Server = require('karma').Server;
 var gutil = require('gulp-util');
 var useref = require('gulp-useref');
+var uglify = require('gulp-uglify');
+var debug = require('gulp-debug');
+var cached = require('gulp-cached');
+var unCss = require('gulp-uncss');
+var cssnano = require('gulp-cssnano');
 
 function customPlumber(errTitle) {
     if (process.env.CI) {
@@ -93,6 +98,18 @@ gulp.task('nunjucks', function() {
 gulp.task('useref', function() {
     return gulp.src('app/*.html')
         .pipe(useref())
+        .pipe(cached('useref'))
+        .pipe(debug())
+        .pipe(gulpIf('*.js', uglify()))
+        .pipe(gulpIf('*.css', unCss({
+          html: ['app/*.html'],
+          ignore: [
+            '.susy-test',
+            /.is-/,
+            /.has-/
+          ]
+          })))
+        .pipe(gulpIf('*.css', cssnano()))
         .pipe(gulp.dest('dist'));
 });
 
