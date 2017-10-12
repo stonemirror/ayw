@@ -12,8 +12,14 @@ var data = require('gulp-data');
 var fs = require('fs');
 var del = require('del');
 var runSequence = require('run-sequence');
+//
+// Javascript
+//
 var jshint = require('gulp-jshint');
 var jscs = require('gulp-jscs');
+//
+// SCSS
+//
 var scssLint = require('gulp-scss-lint');
 var Server = require('karma').Server;
 var gutil = require('gulp-util');
@@ -23,6 +29,9 @@ var debug = require('gulp-debug');
 var cached = require('gulp-cached');
 var unCss = require('gulp-uncss');
 var cssnano = require('gulp-cssnano');
+var imagemin = require('gulp-imagemin');
+var cache = require('gulp-cache');
+var newer = require('gulp-newer');
 
 function customPlumber(errTitle) {
     if (process.env.CI) {
@@ -79,6 +88,35 @@ gulp.task('sprites', function() {
       .pipe(gulpIf('*.png', gulp.dest('app/images')))
       .pipe(gulpIf('*.scss', gulp.dest('app/scss')));
 })
+
+// gulp.task('images', function() {
+//   return gulp.src('app/images/**/*.+(png|jpg|jpeg|gif|svg)')
+//     .pipe(cache(imagemin({
+//             progressive: true,
+//             optimizationLevel: 5,
+//             multipass: true,
+//             SVGOPlugins: [
+//               {'removeTitle': true },
+//               {'removeUselessStrokeAndFill': false}
+//             ]
+//           }), {name: 'project'})) // use a project-specific cache
+//     .pipe(gulp.dest('dist/images'));
+// });
+
+gulp.task('images', function() {
+  return gulp.src('app/images/**/*.+(png|jpg|jpeg|gif|svg)')
+    .pipe(newer('dist/images'))
+    .pipe(imagemin({
+            progressive: true,
+            optimizationLevel: 5,
+            multipass: true,
+            SVGOPlugins: [
+              {'removeTitle': true },
+              {'removeUselessStrokeAndFill': false}
+            ]
+          }))
+    .pipe(gulp.dest('dist/images'));
+});
 
 gulp.task('nunjucks', function() {
     return gulp.src('app/pages/**/*.+(html|nunjucks)')
@@ -150,6 +188,10 @@ gulp.task('lint:scss', function() {
         }));
 })
 
+gulp.task('cache:clear', function(callback) {
+  return cache.clearAll(callback);
+});
+
 gulp.task('default', function(callback) {
     runSequence(
       'clean:dev',
@@ -167,6 +209,17 @@ gulp.task('dev-ci', function(callback) {
       ['sass', 'nunjucks'],
       callback
     );
+});
+
+eslint = require('gulp-eslint');
+
+gulp.task('eslint', function() {
+  return gulp.src('app/js/**/*.js')
+    .pipe(customPlumber('ESLint error!'))
+    .pipe(eslint())
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError())
+    .pipe(gulp.dest('app/js'))
 });
 
 gulp.task('watch', function() {
