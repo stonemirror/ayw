@@ -1,37 +1,24 @@
 var gulp = require('gulp');
-var sass = require('gulp-sass');
-var plumber = require('gulp-plumber');
-var notify = require('gulp-notify');
-var browserSync = require('browser-sync');
-var autoprefixer = require('gulp-autoprefixer');
-var sourcemaps = require('gulp-sourcemaps');
-var spritesmith = require('gulp.spritesmith');
+//
+// Utility functions
+//
+var debug = require('gulp-debug');
+var gutil = require('gulp-util');
 var gulpIf = require('gulp-if');
-var nunjucksRender = require('gulp-nunjucks-render');
-var data = require('gulp-data');
 var fs = require('fs');
 var del = require('del');
 var runSequence = require('run-sequence');
+///
+// Optimization
 //
-// Javascript
-//
-var jshint = require('gulp-jshint');
-var jscs = require('gulp-jscs');
-//
-// SCSS
-//
-var scssLint = require('gulp-scss-lint');
-var Server = require('karma').Server;
-var gutil = require('gulp-util');
-var useref = require('gulp-useref');
-var uglify = require('gulp-uglify');
-var debug = require('gulp-debug');
-var cached = require('gulp-cached');
-var unCss = require('gulp-uncss');
-var cssnano = require('gulp-cssnano');
-var imagemin = require('gulp-imagemin');
 var cache = require('gulp-cache');
 var newer = require('gulp-newer');
+
+//
+// Error handling and notification
+//
+var plumber = require('gulp-plumber');
+var notify = require('gulp-notify');
 
 function customPlumber(errTitle) {
     if (process.env.CI) {
@@ -52,6 +39,11 @@ function customPlumber(errTitle) {
     }
 }
 
+//
+// Browser sync
+//
+var browserSync = require('browser-sync');
+
 gulp.task('browserSync', function() {
     browserSync({
         server: {
@@ -59,6 +51,14 @@ gulp.task('browserSync', function() {
         },
     })
 });
+
+//
+// SCSS compilation and linting
+//
+var sass = require('gulp-sass');
+var scssLint = require('gulp-scss-lint');
+var autoprefixer = require('gulp-autoprefixer');
+var sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('sass', function() {
     return gulp.src('app/scss/**/*.scss')
@@ -74,6 +74,56 @@ gulp.task('sass', function() {
             stream: true
         }))
 });
+
+gulp.task('lint:scss', function() {
+    return gulp.src('app/scss/**/*.scss')
+        .pipe(scssLint({
+            config: '.scss-lint.yml'
+        }));
+})
+
+//
+// Javascript linting
+//
+var jshint = require('gulp-jshint');
+var jscs = require('gulp-jscs');
+
+gulp.task('lint:js', function() {
+    return gulp.src('app/js/**/*.js')
+      .pipe(customPlumber('Error running JShint'))
+      .pipe(jshint())
+      .pipe(jshint.reporter('jshint-stylish'))
+      .pipe(jshint.reporter('fail', {
+          ignoreWarning: true,
+          ignoreInfo: true
+      }))
+      .pipe(jscs({
+          fix: true,
+          configPath: '.jscsrc'
+      }))
+      .pipe(gulp.dest('app/js'));
+})
+
+eslint = require('gulp-eslint');
+
+gulp.task('eslint', function() {
+  return gulp.src('app/js/**/*.js')
+    .pipe(customPlumber('ESLint error!'))
+    .pipe(eslint({
+      fix: true,
+      globals: [
+        "$"
+      ]
+    }))
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError())
+    .pipe(gulp.dest('app/js'));
+});
+
+//
+// Image optimization: sprites
+//
+var spritesmith = require('gulp.spritesmith');
 
 gulp.task('sprites', function() {
     gulp.src('app/images/sprites/**/*')
@@ -103,6 +153,11 @@ gulp.task('sprites', function() {
 //     .pipe(gulp.dest('dist/images'));
 // });
 
+//
+// Image optimization: minimization
+//
+var imagemin = require('gulp-imagemin');
+
 gulp.task('images', function() {
   return gulp.src('app/images/**/*.+(png|jpg|jpeg|gif|svg)')
     .pipe(newer('dist/images'))
@@ -117,6 +172,12 @@ gulp.task('images', function() {
           }))
     .pipe(gulp.dest('dist/images'));
 });
+
+//
+// HTML templating
+//
+var data = require('gulp-data');
+var nunjucksRender = require('gulp-nunjucks-render');
 
 gulp.task('nunjucks', function() {
     return gulp.src('app/pages/**/*.+(html|nunjucks)')
@@ -133,11 +194,22 @@ gulp.task('nunjucks', function() {
       }));
 });
 
+//
+// Minifying, stripping, bundling...
+//
+var useref = require('gulp-useref');
+var uglify = require('gulp-uglify');
+var unCss = require('gulp-uncss');
+var cssnano = require('gulp-cssnano');
+var cached = require('gulp-cached');
+var rev = require('gulp-rev');
+var revReplace = require('gulp-rev-replace');
+
 gulp.task('useref', function() {
     return gulp.src('app/*.html')
         .pipe(useref())
         .pipe(cached('useref'))
-        .pipe(debug())
+//        .pipe(debug())
         .pipe(gulpIf('*.js', uglify()))
         .pipe(gulpIf('*.css', unCss({
           html: ['app/*.html'],
@@ -148,8 +220,16 @@ gulp.task('useref', function() {
           ]
           })))
         .pipe(gulpIf('*.css', cssnano()))
+        .pipe(gulpIf('*.js', rev()))
+        .pipe(gulpIf('*.css', rev()))
+        .pipe(revReplace())
         .pipe(gulp.dest('dist'));
 });
+
+//
+// Continuous integration: testing
+//
+var Server = require('karma').Server;
 
 gulp.task('test', function(done) {
     new Server({
@@ -158,35 +238,21 @@ gulp.task('test', function(done) {
     }, done).start();
 });
 
+gulp.task('dev-ci', function(callback) {
+    runSequence(
+      'clean:dev',
+      ['sprites', 'lint:js', 'lint:scss'],
+      ['sass', 'nunjucks'],
+      callback
+    );
+});
+
 gulp.task('clean:dev', function() {
     return del.sync([
         'app/css',
         'app/*.html'
     ]);
 });
-
-gulp.task('lint:js', function() {
-    return gulp.src('app/js/**/*.js')
-      .pipe(customPlumber('Error running JShint'))
-      .pipe(jshint())
-      .pipe(jshint.reporter('jshint-stylish'))
-      .pipe(jshint.reporter('fail', {
-          ignoreWarning: true,
-          ignoreInfo: true
-      }))
-      .pipe(jscs({
-          fix: true,
-          configPath: '.jscsrc'
-      }))
-      .pipe(gulp.dest('app/js'));
-})
-
-gulp.task('lint:scss', function() {
-    return gulp.src('app/scss/**/*.scss')
-        .pipe(scssLint({
-            config: '.scss-lint.yml'
-        }));
-})
 
 gulp.task('cache:clear', function(callback) {
   return cache.clearAll(callback);
@@ -202,24 +268,44 @@ gulp.task('default', function(callback) {
     );
 });
 
-gulp.task('dev-ci', function(callback) {
-    runSequence(
-      'clean:dev',
-      ['sprites', 'lint:js', 'lint:scss'],
-      ['sass', 'nunjucks'],
-      callback
-    );
+//
+// Copy webfont files to dist
+//
+gulp.task('fonts', function() {
+  return gulp.src('app/fonts/**/*')
+    .pipe(gulp.dest('dist/fonts'));
 });
 
-eslint = require('gulp-eslint');
+//
+// Clean the dist folder
+//
+gulp.task('clean:dist', function(callback) {
+  return del.sync([
+    'dist/**/*',
+    '!dist/images',
+    '!dist/images/**/*'
+  ]);
+});
 
-gulp.task('eslint', function() {
-  return gulp.src('app/js/**/*.js')
-    .pipe(customPlumber('ESLint error!'))
-    .pipe(eslint())
-    .pipe(eslint.format())
-    .pipe(eslint.failAfterError())
-    .pipe(gulp.dest('app/js'))
+//
+// Unified build task
+//
+gulp.task('build', function(callback) {
+  runSequence(
+    ['clean:dev', 'clean:dist'],
+    ['sprites', 'lint:js', 'lint:scss'],
+    ['sass', 'nunjucks'],
+    ['useref', 'images', 'fonts', 'test'],
+    callback
+  );
+});
+
+gulp.task('browserSync:dist', function() {
+  browserSync.init({
+    server: {
+      baseDir: 'dist'
+    }
+  });
 });
 
 gulp.task('watch', function() {
